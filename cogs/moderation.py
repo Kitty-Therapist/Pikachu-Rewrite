@@ -65,6 +65,11 @@ class moderation(commands.Cog):
         await ctx.send("Restarting...")
         await self.bot.logout()
         await self.bot.close()
+    
+    @commands.command
+    async def ping(self, ctx):
+        """Pings to see if it's still alive."""
+        await ctx.send("Pika, Pika!!")
 
     @commands.command(pass_context=True, hidden=True, name='eval')
     async def _eval(self, ctx, *, body: str):
