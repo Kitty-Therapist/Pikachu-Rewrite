@@ -1,126 +1,78 @@
 import os
+import discord
 import asyncio 
 import subprocess
 import configparser
 import inspect
 import textwrap
+from datetime import datetime
 from contextlib import redirect_stdout
 import io
 import traceback
 from subprocess import Popen
 from discord.ext import commands
+from discord import ActivityType
 
 class moderation(commands.Cog):
     def __init__(self, bot):
         self.bot:commands.Bot = bot
         self._last_result = None 
-
-    async def cog_check(self, ctx):
-        return await ctx.bot.is_owner(ctx.author)
-
-    def cleanup_code(self, content):
-        """Automatically removes code blocks from the code."""
-        # remove ```py\n```
-        if content.startswith('```') and content.endswith('```'):
-            return '\n'.join(content.split('\n')[1:-1])
-
-        # remove `foo`
-        return content.strip('` \n')
-
-    @commands.command(hidden=True)
-    async def reload(self, ctx, *, cog: str):
-        cogs = []
-        for c in ctx.bot.cogs:
-            cogs.append(c.replace('Cog', ''))
-
-        if cog in cogs:
-            self.bot.unload_extension(f"cogs.{cog}")
-            self.bot.load_extension(f"cogs.{cog}")
-            await ctx.send(f'**{cog}** has been reloaded')
-        else:
-            await ctx.send(f"I can't find that cog.")
-
-    @commands.command(hidden=True)
-    async def load(self, ctx, cog: str):
-        if os.path.isfile(f"cogs/{cog}.py") or os.path.isfile(f"BrilliantGhoulBot/cogs/{cog}.py"):
-            self.bot.load_extension(f"cogs.{cog}")
-            await ctx.send(f"**{cog}** has been loaded!")
-        else:
-            await ctx.send(f"I can't find that cog.")
-
-    @commands.command(hidden=True)
-    async def unload(self, ctx, cog: str):
-        cogs = []
-        for c in ctx.bot.cogs:
-            cogs.append(c.replace('Cog', ''))
-        if cog in cogs:
-            self.bot.unload_extension(f"cogs.{cog}")
-            await ctx.send(f'**{cog}** has been unloaded')
-        else:
-            await ctx.send(f"I can't find that cog.")
-            
-    @commands.command(hidden=True)
-    async def restart(self, ctx):
-        """Restarts the bot"""
-        await ctx.send("Restarting...")
-        await self.bot.logout()
-        await self.bot.close()
-    
-    @commands.command
+        
+    @commands.command()
     async def ping(self, ctx):
         """Pings to see if it's still alive."""
         await ctx.send("Pika, Pika!!")
-
-    @commands.command(pass_context=True, hidden=True, name='eval')
-    async def _eval(self, ctx, *, body: str):
-        """Evaluates a code"""
-        if "token" in body:
-            await ctx.send("No token stealing allowed.")
-            return
-
-        env = {
-            'bot': self.bot,
-            'ctx': ctx,
-            'channel': ctx.channel,
-            'author': ctx.author,
-            'guild': ctx.guild,
-            'message': ctx.message,
-            '_': self._last_result
-        }
-
-        env.update(globals())
-
-        body = self.cleanup_code(body)
-        stdout = io.StringIO()
-
-        to_compile = f'async def func():\n{textwrap.indent(body, "  ")}'
-
-        try:
-            exec(to_compile, env)
-        except Exception as e:
-            return await ctx.send(f'```py\n{e.__class__.__name__}: {e}\n```')
-
-        func = env['func']
-        try:
-            with redirect_stdout(stdout):
-                ret = await func()
-        except Exception as e:
-            value = stdout.getvalue()
-            await ctx.send(f'```py\n{value}{traceback.format_exc()}\n```')
-        else:
-            value = stdout.getvalue()
+    
+    @commands.command(aliases=["info"])
+    @commands.bot_has_permissions(embed_links=True)
+    async def userinfo(self, ctx, *, user: str = None):
+        """Looks up information for the user."""
+        #TODO: Fix the issue where the bot doesn't info users that are not in the server.
+        if user == None:
+            user = ctx.author
+            member = ctx.guild.get_member(user.id)
+        if user != ctx.author:
             try:
-                await ctx.message.add_reaction('\u2705')
+                member = await commands.MemberConverter().convert(ctx, user)
+                user = member
             except:
-                pass
-
-            if ret is None:
-                if value:
-                    await ctx.send(f'```py\n{value}\n```')
-            else:
-                self._last_result = ret
-                await ctx.send(f'```py\n{value}{ret}\n```')
-
+                user = await ctx.bot.get_user_info(int(user))
+                member = None
+        embed = discord.Embed(color=0x7289DA)
+        embed.set_thumbnail(url=user.avatar_url)
+        embed.timestamp = datetime.utcnow()
+        status = str(user.status)
+        if user.status == discord.Status.offline:
+            status = "Offline"
+        elif user.status == discord.Status.dnd:
+            status = "Do Not Disturb"
+        elif user.status == discord.Status.online:
+            status = "Online"
+        elif user.status is discord.Status.idle:
+            status = "Away"
+        activity = str(user.activity)
+        if user.activity.type == ActivityType.listening:
+            activity = f"Listening to {user.activity.name}"
+        elif user.activity.type == ActivityType.streaming:
+            activity = f"Streaming {user.activity.name}"
+        elif user.activity.type == ActivityType.watching:
+            activity = f"Watching {user.activity.name}"
+        elif user.activity.type == ActivityType.playing:
+            activity = f"Playing {user.activity.name}"
+        else:
+            activity = "Unknown activity"
+        account_made = user.created_at.strftime("%d-%m-%Y")
+        embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar_url)
+        embed.add_field(name="» **Information** «", value=f"**Name:** {user.name}#{user.discriminator}\n **Mention:** {user.mention}\n **ID:** {user.id}\n**Activity:** {activity}\n**Bot Account Status:** {user.bot}\n**Animated Avatar:** {user.is_avatar_animated()}\n**Account Made:** {account_made} ({(ctx.message.created_at - user.created_at).days} days ago)\n**Avatar:** [Avatar URL]({user.avatar_url})\n**Current Status:** {status}", inline=True)
+        if member != None:
+            account_joined = member.joined_at.strftime("%d-%m-%Y")
+            role_list = [role.mention for role in reversed(member.roles) if role is not ctx.guild.default_role]
+            if len(role_list) > 40:
+                role_list = "Too many roles"
+            elif len(role_list) == 0:
+                role_list = "This user does not have any roles in this server."
+            embed.add_field(name="» **Member Info** «", value=f"**Member Nickname:** {member.nick}\n**Joined At:** {account_joined} ({(ctx.message.created_at - member.joined_at).days} days ago)\n**Roles:** {role_list}", inline=True)
+        await ctx.send(embed=embed)
 
 def setup(bot):
     bot.add_cog(moderation(bot))

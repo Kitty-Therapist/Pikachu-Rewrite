@@ -21,7 +21,7 @@ bot = commands.Bot(command_prefix="!")
 bot.starttime = datetime.datetime.now()
 bot.startup_done = False
 
-initial_extensions = ['moderation']
+initial_extensions = ['moderation', 'owner']
 
 @bot.event
 async def on_command_error(ctx: commands.Context, error):
