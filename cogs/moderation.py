@@ -50,17 +50,20 @@ class moderation(commands.Cog):
             status = "Online"
         elif user.status is discord.Status.idle:
             status = "Away"
-        activity = str(user.activity)
-        if user.activity.type == ActivityType.listening:
-            activity = f"Listening to {user.activity.name}"
-        elif user.activity.type == ActivityType.streaming:
-            activity = f"Streaming {user.activity.name}"
-        elif user.activity.type == ActivityType.watching:
-            activity = f"Watching {user.activity.name}"
-        elif user.activity.type == ActivityType.playing:
-            activity = f"Playing {user.activity.name}"
+        activity = user.activity
+        if user.activity is None:
+            activity = "No activity"
         else:
-            activity = "Unknown activity"
+            if user.activity.type == ActivityType.listening:
+                activity = f"Listening to {user.activity.name}"
+            elif user.activity.type == ActivityType.streaming:
+                activity = f"Streaming {user.activity.name}"
+            elif user.activity.type == ActivityType.watching:
+                activity = f"Watching {user.activity.name}"
+            elif user.activity.type == ActivityType.playing:
+                activity = f"Playing {user.activity.name}"
+            else:
+                activity = "Unknown activity"
         account_made = user.created_at.strftime("%d-%m-%Y")
         embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.avatar_url)
         embed.add_field(name="» **Information** «", value=f"**Name:** {user.name}#{user.discriminator}\n **Mention:** {user.mention}\n **ID:** {user.id}\n**Activity:** {activity}\n**Bot Account Status:** {user.bot}\n**Animated Avatar:** {user.is_avatar_animated()}\n**Account Made:** {account_made} ({(ctx.message.created_at - user.created_at).days} days ago)\n**Avatar:** [Avatar URL]({user.avatar_url})\n**Current Status:** {status}", inline=True)
