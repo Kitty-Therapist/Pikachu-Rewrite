@@ -70,11 +70,12 @@ class moderation(commands.Cog):
         if member != None:
             account_joined = member.joined_at.strftime("%d-%m-%Y")
             role_list = [role.mention for role in reversed(member.roles) if role is not ctx.guild.default_role]
+            role_list_formatted = ", ".join(role_list)
             if len(role_list) > 40:
-                role_list = "Too many roles"
+                role_list_formatted = "Too many roles"
             elif len(role_list) == 0:
-                role_list = "This user does not have any roles in this server."
-            embed.add_field(name="» **Member Info** «", value=f"**Member Nickname:** {member.nick}\n**Joined At:** {account_joined} ({(ctx.message.created_at - member.joined_at).days} days ago)\n**Roles:** {role_list}", inline=True)
+                role_list_formatted = "This user does not have any roles in this server."
+            embed.add_field(name="» **Member Info** «", value=f"**Member Nickname:** {member.nick}\n**Joined At:** {account_joined} ({(ctx.message.created_at - member.joined_at).days} days ago)\n**Roles:** {role_list_formatted}", inline=True)
         await ctx.send(embed=embed)
 
 def setup(bot):

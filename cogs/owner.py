@@ -70,12 +70,15 @@ class owner(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.author.id == 638497323214831651:
-            user = message.author
-            role = discord.utils.get(user.guild.roles, id=650893851283685407)
-            channel = user.guild.get_channel(635634166343401495)
-            await role.edit(mentionable=True)
-            await channel.send(f"{role.mention}, Pika Pika! Seems like our datamine bot found something!")
-            await role.edit(mentionable=False)
+            if message.content == "/(Canary\sbuild:\s([0-9]*))/":
+                return
+            else:
+                user = message.author
+                role = discord.utils.get(user.guild.roles, id=650893851283685407)
+                channel = user.guild.get_channel(635634166343401495)
+                await role.edit(mentionable=True)
+                await channel.send(f"{role.mention}, Pika Pika! Seems like our datamine bot found something!")
+                await role.edit(mentionable=False)
         else:
             return
 
