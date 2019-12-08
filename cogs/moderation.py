@@ -21,7 +21,7 @@ class moderation(commands.Cog):
     @commands.command()
     async def ping(self, ctx):
         """Pings to see if it's still alive."""
-        await ctx.send("Pika, Pika!!")
+        await ctx.send("Pika, Pika!! :heart:")
     
     @commands.command(aliases=["info"])
     @commands.bot_has_permissions(embed_links=True)
