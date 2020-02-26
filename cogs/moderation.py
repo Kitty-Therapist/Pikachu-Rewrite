@@ -62,6 +62,8 @@ class moderation(commands.Cog):
                 activity = f"Watching {user.activity.name}"
             elif user.activity.type == ActivityType.playing:
                 activity = f"Playing {user.activity.name}"
+            elif user.activity.type == ActivityType.custom:
+                activity = f"{user.activity.name}"
             else:
                 activity = "Unknown activity"
         account_made = user.created_at.strftime("%d-%m-%Y")
