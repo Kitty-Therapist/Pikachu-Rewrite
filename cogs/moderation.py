@@ -25,7 +25,7 @@ class moderation(commands.Cog):
     
     @commands.command(aliases=["info"])
     @commands.bot_has_permissions(embed_links=True)
-    async def userinfo(self, ctx, *, user: str = None):
+    async def userinfo(self, ctx, *, user: discord.User = None):
         """Looks up information for the user."""
         #TODO: Fix the issue where the bot doesn't info users that are not in the server.
         if user == None:
