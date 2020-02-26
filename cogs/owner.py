@@ -67,21 +67,16 @@ class owner(commands.Cog):
         await self.bot.logout()
         await self.bot.close()
 
-  #  @commands.Cog.listener()
-  #  async def on_message(self, message):
-  #      if message.author.id == 638497323214831651:
-  #          if message.content == "/(Canary\sbuild:\s([0-9]*))/":
-  #              return
-  #          else:
-   #             user = message.author
-   #             role = discord.utils.get(user.guild.roles, id=650893851283685407)
-   #             channel = user.guild.get_channel(635634166343401495)
-   #             await role.edit(mentionable=True)
-   #             await channel.send(f"{role.mention}, Pika Pika! Seems like our datamine bot found something!")
-    #            await role.edit(mentionable=False)
-   #     else:
-    #        return
-
+    @commands.command()
+    async def pull(self, ctx):
+        """Pulls from github so an upgrade can be performed without full restart"""
+        async with ctx.typing():
+            p = Popen(["git pull"], cwd=os.getcwd(), shell=True, stdout=subprocess.PIPE)
+            while p.poll() is None:
+                await asyncio.sleep(1)
+            out, error = p.communicate()
+            await ctx.send(f"Pull completed with exit code {p.returncode}```yaml\n{out.decode('utf-8')}```")
+            
     @commands.command(pass_context=True, hidden=True, name='eval')
     async def _eval(self, ctx, *, body: str):
         """Evaluates a code"""
